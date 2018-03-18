@@ -5,7 +5,7 @@
 #include <cmath>
 
 using namespace std;
-int SIZE;
+int SIZE = 4;
 
 //This is to remember what we just changed so we don't hit a false plateau
 int last = -1;
@@ -13,14 +13,14 @@ int last = -1;
 //keeping arrays to hold the number of queens in each row / diagonal to find heuristic
 //Math is a little tricky
 int getHeuristic(int* candidate){
-    int i, ret = 0;
-    int row[SIZE];
-    int ldiag[(SIZE * 2) - 2];
-    int rdiag[(SIZE * 2) - 2];
+    int i = 0, ret = 0;
+    int row[SIZE] = {0};
+    int ldiag[(SIZE * 2) - 1] = {0};
+    int rdiag[(SIZE * 2) - 1] = {0};
     for (int j = 0; j < SIZE; j++){
         i = candidate[j];
         row[i]++;
-        rdiag[abs(i - SIZE) + j]++;
+        rdiag[abs(i - (SIZE-1)) + j]++;
         ldiag[i + j]++;
     }
     for(int j = 0; j < SIZE; j++){
@@ -41,7 +41,8 @@ int getRand(){
 //When using greedy, we will just change the original to the best neighbor to avoid copying costs
 bool getBestNeighbor(int* candidate, int& curH){
     int rando = getRand();
-    while (rando == last) rando = getRand();
+    while (rando == last) {rando = getRand();}
+    last = rando;
     int curLoc = candidate[rando];
     //just put 1000 so it will be overwritten on the first cycle
     int newVal, bestLoc;
@@ -63,10 +64,10 @@ return false;
 }
 
 void shuffle(int* board){
-    int rando = getRand();
-    int rando2 = getRand();
 
-    board[rando] = rando2;
+    for(int i = 0; i< SIZE; i++){
+        board[i] = getRand();
+    }
 
 }
 
@@ -78,12 +79,20 @@ bool hillClimbSearch(int* board){
         if(val == 0) return true;
         if(!good) shuffle(board);
     }
-    return true;
+
 }
 
 
+void printBoard(int* board){
+    for(int i = 0; i < SIZE; i++){
+        for (int j = 0; j< SIZE; j++){
+            if (board[j] == i) cout << "1 ";
+            else cout << "0 ";
+        }
+        cout << endl;
+    }
 
-
+}
 
 int main(int argc, char ** argv){
 /*
@@ -92,17 +101,16 @@ if(argc != 2){
     exit(1);
 }
 */
-SIZE = 4;
 srand(time(0));
 //Board stored as an array of squares from the bottom
 //Make board
 
-int board[SIZE];
+int board[SIZE] = {0,1,2,3};
 
+    /*
 for(int i = 0; i < SIZE; i++){
         board[i] = getRand();
-        cout << board[i];
-    }
+    }*/
 
 if(hillClimbSearch(board)){
     string s;
@@ -114,7 +122,9 @@ if(hillClimbSearch(board)){
             cout << board[i];
         }
     }
+    if(s == "P") printBoard(board);
 }
 
     return 0;    
 }
+
