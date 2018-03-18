@@ -5,25 +5,26 @@
 #include <cmath>
 
 using namespace std;
-int SIZE = 4;
+int SIZE;
 
 //This is to remember what we just changed so we don't hit a false plateau
 int last = -1;
 
 //keeping arrays to hold the number of queens in each row / diagonal to find heuristic
-//Math is a little tricky
+//Math is a little tricky (don't worry it works)
 int getHeuristic(int* candidate){
+    int arrSize = (SIZE * 2) - 1;
     int i = 0, ret = 0;
-    int row[SIZE] = {0};
-    int ldiag[(SIZE * 2) - 1] = {0};
-    int rdiag[(SIZE * 2) - 1] = {0};
+    int row[arrSize] = {0};
+    int ldiag[arrSize] = {0};
+    int rdiag[arrSize] = {0};
     for (int j = 0; j < SIZE; j++){
         i = candidate[j];
         row[i]++;
         rdiag[abs(i - (SIZE-1)) + j]++;
         ldiag[i + j]++;
     }
-    for(int j = 0; j < SIZE; j++){
+    for(int j = 0; j < arrSize; j++){
         if (row[j] > 1) ret += (row[j] - 1);
         if (ldiag[j] > 1) ret += (ldiag[j] - 1);
         if (rdiag[j] > 1) ret += (rdiag[j] - 1);
@@ -77,7 +78,7 @@ bool hillClimbSearch(int* board){
     while(true){
         good = getBestNeighbor(board, val);
         if(val == 0) return true;
-        if(!good) shuffle(board);
+        //if(!good) shuffle(board);
     }
 
 }
@@ -95,22 +96,23 @@ void printBoard(int* board){
 }
 
 int main(int argc, char ** argv){
-/*
+
 if(argc != 2){
     cout << "Unexpexted number of arguments. Run with [n] to solve for queens.\n";
     exit(1);
 }
-*/
+
+SIZE = atoi(argv[1]);
+
 srand(time(0));
 //Board stored as an array of squares from the bottom
 //Make board
 
-int board[SIZE] = {0,1,2,3};
+int board[SIZE];
 
-    /*
 for(int i = 0; i < SIZE; i++){
         board[i] = getRand();
-    }*/
+    }
 
 if(hillClimbSearch(board)){
     string s;
@@ -127,4 +129,3 @@ if(hillClimbSearch(board)){
 
     return 0;    
 }
-
