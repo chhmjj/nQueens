@@ -6,30 +6,29 @@
 
 using namespace std;
 int SIZE;
+int arrSize;
+
+
 
 //This is to remember what we just changed so we don't hit a false plateau
 int last = -1;
 
 //keeping arrays to hold the number of queens in each row / diagonal to find heuristic
-//Math is a little tricky (don't worry it works)
+//Math is a little tricky 
 int getHeuristic(int* candidate){
-    int arrSize = (SIZE * 2) - 1;
     int i = 0, ret = 0;
-    int row[arrSize] = {0};
-    int ldiag[arrSize] = {0};
-    int rdiag[arrSize] = {0};
+    bool row[arrSize] = {false};
+    bool ldiag[arrSize] = {false};
+    bool rdiag[arrSize] = {false};
     for (int j = 0; j < SIZE; j++){
         i = candidate[j];
-        row[i]++;
-        rdiag[abs(i - (SIZE-1)) + j]++;
-        ldiag[i + j]++;
+        if(row[i]) ret++;
+            else row[i] = true;
+        if(rdiag[(SIZE-1) - i + j]) ret++;
+            else rdiag[(SIZE-1) - i + j] = true;
+        if(ldiag[i + j]) ret++;
+            else ldiag[i+j] = true;
     }
-    for(int j = 0; j < arrSize; j++){
-        if (row[j] > 1) ret += (row[j] - 1);
-        if (ldiag[j] > 1) ret += (ldiag[j] - 1);
-        if (rdiag[j] > 1) ret += (rdiag[j] - 1);
-    }
-
     return ret;
 }
 
@@ -37,31 +36,31 @@ int getRand(){
     return rand() % SIZE;
 }
 
-//We will be finding "neighbors on one column at a time(randomly) just to not generate too many at once
-//"last" variable will make sure we don't edit the same column twice in a row
-//When using greedy, we will just change the original to the best neighbor to avoid copying costs
-bool getBestNeighbor(int* candidate, int& curH){
-    int rando = getRand();
-    while (rando == last) {rando = getRand();}
-    last = rando;
-    int curLoc = candidate[rando];
+//local search for finding best neighbor
+int getBestNeighbor(int* candidate){
+    int copy[SIZE];
+    for(int i = 0; i <SIZE; i++){
+        copy[i] = candidate[i];
+    }
     //just put 1000 so it will be overwritten on the first cycle
-    int newVal, bestLoc;
+    int newVal, bestLocI, bestLocJ, current;
     int bestVal = 1000;
     for (int i = 0; i < SIZE; i++){
-        candidate[rando] = i;
-        newVal = getHeuristic(candidate);
-        if (newVal < bestVal){
-            bestVal = newVal;
-            bestLoc = i;
+        for (int j = 0; j < SIZE; j++){
+            copy[i] = j;
+            newVal = getHeuristic(copy);
+            if (newVal < bestVal){
+                bestVal = newVal;
+                bestLocI = i;
+                bestLocJ = j;
+            }
+            //reset to actual location
+            copy[i] = candidate[i];
         }
+        
     }
-    if (bestLoc != curLoc){
-        candidate[rando] = bestLoc;
-        curH = bestVal;
-        return true;
-    }
-return false;
+    candidate[bestLocI] = bestLocJ;
+    return bestVal;
 }
 
 void shuffle(int* board){
@@ -73,12 +72,18 @@ void shuffle(int* board){
 }
 
 bool hillClimbSearch(int* board){
+    int myval = getHeuristic(board);
     int val = -1;
     bool good;
     while(true){
-        good = getBestNeighbor(board, val);
+        val = getBestNeighbor(board);
         if(val == 0) return true;
-        //if(!good) shuffle(board);
+        //if val > myval we have hit a non-solution local maximum and need to restart
+        if(val >= myval) {
+            shuffle(board);
+            myval = getHeuristic(board);
+        }
+        else myval = val;
     }
 
 }
@@ -103,7 +108,7 @@ if(argc != 2){
 }
 
 SIZE = atoi(argv[1]);
-
+arrSize = SIZE * 2 - 1;
 srand(time(0));
 //Board stored as an array of squares from the bottom
 //Make board
@@ -116,13 +121,14 @@ for(int i = 0; i < SIZE; i++){
 
 if(hillClimbSearch(board)){
     string s;
-    cout << "Found a solution" << endl << "Enter 'p' to print concise or 'P' to print full board (anything else to quit)" << endl;
+    cout << "Found a solution" << endl << "Enter 'p' to print concise or 'P' to print full board \nanything else to quit" << endl;
     cin >> s;
-
     if(s == "p"){
-        for(int i = 0; i < SIZE; i++){
-            cout << board[i];
+        for(int i = 0; i < SIZE - 1; i++){
+            cout << board[i] << ",";
         }
+        cout << board[SIZE - 1];
+        cout << endl;
     }
     if(s == "P") printBoard(board);
 }
